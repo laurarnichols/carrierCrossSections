@@ -213,9 +213,7 @@ module wfcExportVASPMod
       !! Radial grid points
     real(kind=dp) :: rAugMax
       !! Maximum radius of augmentation sphere
-    real(kind=dp) :: recipProj(16,100)
-      !! Reciprocal-space projectors
-    real(kind=dp) :: realProj(16,100)
+    real(kind=dp) :: realProjSpline(100,5,16)
       !! Real-space projectors
     real(kind=dp), allocatable :: wae(:,:)
       !! AE wavefunction
@@ -2250,6 +2248,9 @@ module wfcExportVASPMod
 
 
     ! Local variables:
+    real(kind=dp) :: boundDeriv
+      !! Derivative of real-space projector on 
+      !! spline grid at the boundary
     real(kind=dp) :: dummyD(1000)
       !! Dummy variable to ignore input
     real(kind=dp), allocatable :: dummyDA1(:), dummyDA2(:,:)
@@ -2388,21 +2389,32 @@ module wfcExportVASPMod
             ! Increment the number of nlm channels
 
           allocate(dummyDA2(nProj,nProj))
+          allocate(dummyDA1(100))
 
           read(potcarUnit,*) dummyDA2(:,:)
             ! Ignore non-local strength multipliers
 
           do ip = 1, nProj
-            ! Read in the reciprocal-space and real-space
-            ! projectors
 
             ps(ityp)%angmom(ps(ityp)%nChannels+ip) = angmom
 
             read(potcarUnit,*) 
-            read(potcarUnit,*) (ps(ityp)%recipProj(ps(ityp)%nChannels+ip,i), i=1,100)
+            read(potcarUnit,*) (dummyDA1(i), i=1,100)
+              ! Ignore reciprocal projector
+
             read(potcarUnit,*) 
-            read(potcarUnit,*) (ps(ityp)%realProj(ps(ityp)%nChannels+ip,i), i=1,100)
-              !! @todo Figure out if you actually need to read these projectors @endtodo
+            read(potcarUnit,*) (ps(ityp)%realProjSpline(i,2,ps(ityp)%nChannels+ip), i=1,100)
+              ! Read real-space projectors on spline grid
+
+            do i = 1, 100
+              ! Calculate the positions for the spline grid
+
+              ps(ityp)%realProjSpline(i,1,ps(ityp)%nChannels+ip) = (ps(ityp)%psRMax/100)*(i-1)
+
+            enddo
+
+            boundDeriv = (ps(ityp)%realProjSpline(2,2,ps(ityp)%nChannels+ip) - &
+                          ps(ityp)%realProjSpline(2,2,ps(ityp)%nChannels+ip))/(ps(ityp)%psRMax/100)
 
           enddo
 
@@ -2410,6 +2422,7 @@ module wfcExportVASPMod
             ! Increment the number of l channels
 
           deallocate(dummyDA2)
+          deallocate(dummyDA1)
 
           read(potcarUnit,'(1X,A1)') charSwitch
             ! Read character switch
