@@ -2416,6 +2416,13 @@ module wfcExportVASPMod
             boundDeriv = (ps(ityp)%realProjSpline(2,2,ps(ityp)%nChannels+ip) - &
                           ps(ityp)%realProjSpline(2,2,ps(ityp)%nChannels+ip))/(ps(ityp)%psRMax/100)
 
+            if (ps(ityp)%angmom(ps(ityp)%nChannels+1) /= 1) then
+              boundDeriv = 0
+            endif
+
+            call calculateSplineCoefficients(ps(ityp)%realProjSpline(1,1,ps(ityp)%nChannels+ip), &
+                  100, 100, boundDeriv)
+
           enddo
 
           ps(ityp)%nChannels = ps(ityp)%nChannels + nProj
@@ -2590,6 +2597,48 @@ module wfcExportVASPMod
 
     return
   end subroutine readPOTCAR
+
+!----------------------------------------------------------------------------
+  subroutine calculateSplineCoefficients(splineProj, n, ndim, boundDeriv)
+    implicit none
+    !! @todo Add arguments to `calculateSplineCoefficients` #thistask @endtodo
+
+    if (boundDeriv > .99E30_dp) then
+      splineProj(1,4) = 0.0_dp
+      splineProj(1,3) = 0.0_dp
+    else
+      splineProj(1,4) = -.5_dp
+      splineProj(1,3) = (3._dp/(splineProj(2,1) - splineProj(1,1)))* &
+        ((splineProj(2,2) - splineProj(1,2))/(splineProj(2,1) - splineProj(1,1)) - boundDeriv)
+    endif
+
+    do i = 2, n-1
+      S = (splineProj(i,1) - splineProj(i-1,1))/(splineProj(i+1,1) - splineProj(i-1,1))
+      R = S*splineProj(i-1,4) + 2._dp
+      splineProj(i,4) = (S - 1._dp)/R
+      splineProj(i,3) = (6*((splineProj(i+1,2)-splineProj(i,2))/(splineProj(i+1,1) - splineProj(i,1)) - &
+      splineProj(i,3) = (6*((splineProj(i+1,2)-splineProj(i,2))/(splineProj(i+1,1) - splineProj(i,1)) - &
+        (splineProj(i,2) - splineProj(i-1,2))/(splineProj(i,1) - splineProj(i-1,1)))/ &
+        (splineProj(i+1,1) - splineProj(i-1,1)) - S*splineProj(i-1,3))/R
+    ENDDO
+
+    splineProj(n,4) = 0.0_dp
+    splineProj(n,3) = 0.0_dp
+
+    do i = n-1, 1, -1
+      splineProj(i,4) = splineProj(i,4)*splineProj(i+1,4) + splineProj(i,3)
+    enddo
+
+    do i = 1, n-1
+      S = splineProj(i+1,1) - splineProj(i,1)
+      R = (splineProj(i+1,4) - splineProj(i,4))/6
+      splineProj(i,5) = R/S
+      splineProj(i,4) = splineProj(i,4)/2.0_dp
+      splineProj(i,3) = (splineProj(i+1,2) - splineProj(i,2))/S - (splineProj(i,4) + R)*S
+    enddo
+
+    return
+  end subroutine calculateSplineCoefficients
 
 !----------------------------------------------------------------------------
   subroutine writeKInfo(nkstot_local, npwx_local, igk_l2g, nbnd_local, ngk_g, ngk_local, &
@@ -3646,20 +3695,20 @@ module wfcExportVASPMod
                                  wfc_scal, vkb, twf0, evc, twfm, npw_g, gamma_only, nkb, &
                                  l2g_new(:), local_pw )
         endif
-      
+
         if ( .not. file_exists .and. ionode_local ) then
           close(72)
           close(73)
 !          close(74)
         endif
-      
+
         DEALLOCATE(l2g_new)
       ENDDO
 
       deallocate(igk)
-    
+
       CALL deallocate_bec_type ( becp )
-    
+
     ENDIF
 
       !------------------------------------------------------------------------------------
@@ -3672,3 +3721,4 @@ module wfcExportVASPMod
 END SUBROUTINE write_export
 
 end module wfcExportVASPMod
+
