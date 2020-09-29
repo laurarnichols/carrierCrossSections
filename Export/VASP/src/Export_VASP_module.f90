@@ -214,7 +214,7 @@ module wfcExportVASPMod
     real(kind=dp) :: rAugMax
       !! Maximum radius of augmentation sphere
     real(kind=dp) :: realProjSpline(100,5,16)
-      !! Real-space projectors
+      !! Real-space projector spline grid
     real(kind=dp), allocatable :: wae(:,:)
       !! AE wavefunction
     real(kind=dp), allocatable :: wps(:,:)
@@ -2420,8 +2420,8 @@ module wfcExportVASPMod
               boundDeriv = 0
             endif
 
-            call calculateSplineCoefficients(ps(ityp)%realProjSpline(1,1,ps(ityp)%nChannels+ip), &
-                  100, 100, boundDeriv)
+            call calculateSplineCoefficients(boundDeriv, 100, &
+                ps(ityp)%realProjSpline(1,1,ps(ityp)%nChannels+ip))
 
           enddo
 
@@ -2599,9 +2599,34 @@ module wfcExportVASPMod
   end subroutine readPOTCAR
 
 !----------------------------------------------------------------------------
-  subroutine calculateSplineCoefficients(splineProj, n, ndim, boundDeriv)
+  subroutine calculateSplineCoefficients(boundDeriv, n, splineProj)
+    !! @todo Add comments to `calculateSplineCoefficients` #thistask @endtodo
+
     implicit none
-    !! @todo Add arguments to `calculateSplineCoefficients` #thistask @endtodo
+
+    ! Input variables:
+    real(kind=dp), intent(in) :: boundDeriv
+      !! Derivative of real-space projector on 
+      !! spline grid at the boundary
+
+    integer, intent(in) :: n
+      !! Size of spline grid
+
+
+    ! Output variables:
+    real(kind=dp), intent(inout) :: realProjSpline(100,5)
+      !! Real-space projector spline grid
+
+
+    ! Local variables:
+    real(kind=dp) :: R
+      !! Not sure what this is??
+    real(kind=dp) :: S
+      !! Not sure what this is??
+
+    integer :: i
+      !! Loop index
+
 
     if (boundDeriv > .99E30_dp) then
       splineProj(1,4) = 0.0_dp
