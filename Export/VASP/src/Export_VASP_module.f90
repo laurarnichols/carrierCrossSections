@@ -2600,7 +2600,19 @@ module wfcExportVASPMod
 
 !----------------------------------------------------------------------------
   subroutine calculateSplineCoefficients(boundDeriv, n, splineProj)
-    !! @todo Add comments to `calculateSplineCoefficients` #thistask @endtodo
+    !! Calculates spline coefficients using routines in 'Numerical Recipes'
+    !!
+    !! This subroutine expects the first dimension of `splineProj` to be the 
+    !! \(x\) coordinates and the second dimension to be the function values
+    !! on input. The remaining dimensions are calculated to have the relationship
+    !!   * `splineProj(:,1)` = \(x\)
+    !!   * `splineProj(:,2)` = \(a = f(\text{spline})\)
+    !!   * `splineProj(:,3)` = \(b\)
+    !!   * `splineProj(:,4)` = \(c\)
+    !!   * `splineProj(:,5)` = \(d\)
+    !! where \(f(\text{radial}) = a + dx*(b + dx*(c + dx*d))\).
+    !!
+    !! @todo Figure out how `calculateSplineCoefficients` @endtodo
 
     implicit none
 
