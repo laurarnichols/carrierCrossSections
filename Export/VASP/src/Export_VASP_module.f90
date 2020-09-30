@@ -2626,8 +2626,8 @@ module wfcExportVASPMod
 
 
     ! Output variables:
-    real(kind=dp), intent(inout) :: realProjSpline(100,5)
-      !! Real-space projector spline grid
+    real(kind=dp), intent(inout) :: splineProj(100,5)
+      !! Projector on spline grid
 
 
     ! Local variables:
@@ -2657,7 +2657,7 @@ module wfcExportVASPMod
       splineProj(i,3) = (6*((splineProj(i+1,2)-splineProj(i,2))/(splineProj(i+1,1) - splineProj(i,1)) - &
         (splineProj(i,2) - splineProj(i-1,2))/(splineProj(i,1) - splineProj(i-1,1)))/ &
         (splineProj(i+1,1) - splineProj(i-1,1)) - S*splineProj(i-1,3))/R
-    ENDDO
+    enddo
 
     splineProj(n,4) = 0.0_dp
     splineProj(n,3) = 0.0_dp
@@ -2676,6 +2676,30 @@ module wfcExportVASPMod
 
     return
   end subroutine calculateSplineCoefficients
+
+!----------------------------------------------------------------------------
+  subroutine calculateProjectors()
+    !! @todo Add arguments to `calculateProjectors` #thistask @endtodo
+
+    implicit none
+
+    do ityp = 1, nsp
+      ps(ityp)%beta = 0.0_dp
+
+      do ip = 1, nProj
+        do ir = 1, ps(ityp)%nmax
+          
+          if (ps(ityp)%radGrid(ir) > ps(ityp)%realProjSpline(100,1,1)) exit
+
+          call convertToRadialGrid(ps(ityp)%radGrid(ir), 100, ps(ityp)%realProjSpline(1,1,ip), projRadGrid)
+          ps(ityp)%beta(ir,ip) = projRadGrid*ps(ityp)%radGrid(ir)
+
+        enddo
+      enddo
+    enddo
+
+    return
+  end subroutine calculateProjectors
 
 !----------------------------------------------------------------------------
   subroutine writeKInfo(nkstot_local, npwx_local, igk_l2g, nbnd_local, ngk_g, ngk_local, &
