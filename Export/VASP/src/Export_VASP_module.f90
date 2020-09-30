@@ -2717,7 +2717,7 @@ module wfcExportVASPMod
           
           if (ps(ityp)%radGrid(ir) > ps(ityp)%realProjSpline(100,1,1)) exit
 
-          call convertToRadialGrid(ps(ityp)%radGrid(ir), 100, ps(ityp)%realProjSpline(1,1,ip), projRadGrid)
+          call convertToRadialGrid(100, ps(ityp)%realProjSpline(1,1,ip), ps(ityp)%radGrid(ir), projRadGrid)
           ps(ityp)%beta(ir,ip) = projRadGrid*ps(ityp)%radGrid(ir)
 
         enddo
@@ -2726,6 +2726,74 @@ module wfcExportVASPMod
 
     return
   end subroutine calculateProjectors
+
+!----------------------------------------------------------------------------
+  subroutine convertToRadialGrid(n, splineProj, x, projRadGrid)
+    !! Use interval bisection to convert from spline to radial grid
+    !! at a specific point
+    !!
+
+    implicit none
+
+    ! Input variables:
+    integer, intent(in) :: n
+      !! Size of spline grid
+
+    real(kind=dp), intent(in) :: splineProj(100,5)
+      !! Projector on spline grid
+    real(kind=dp), intent(in) :: x
+      !! Position on radial grid
+
+
+    ! Output variables:
+    real(kind=dp), intent(out) :: projRadGrid
+      !! Projector on radial grid
+
+
+    ! Local variables:
+    integer :: i, j, k
+      !! Indices for interval bisection
+
+    real(kind=dp) :: dx
+      !! Difference in radial grid position and
+      !! spline grid position
+
+
+    i = 1
+    j = n
+
+    if (x < splineProj(i,1)) then
+
+      k = 1
+
+    else if (x < splineProj(j,1)) then
+
+      k = (i+j)/2
+
+      do while (i /= k)
+
+        if (x < p(k,1)) then
+          j = k
+        else
+          i = k
+        endif
+
+        k = (i+j)/2
+
+      enddo
+
+    else
+      
+      k = j-1
+
+    endif
+
+    dx = x - splineProj(k,1)
+
+    projRadGrid = splineProj(k,2) + dx*(splineProj(k,3) + dx*(splineProj(k,4) + dx*splineProj(k,5)))
+
+    return
+  end subroutine convertToRadialGrid
 
 !----------------------------------------------------------------------------
   subroutine writeKInfo(nkstot_local, npwx_local, igk_l2g, nbnd_local, ngk_g, ngk_local, &
