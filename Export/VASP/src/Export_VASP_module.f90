@@ -205,6 +205,8 @@ module wfcExportVASPMod
     integer :: nmax
       !! Number of radial grid points
 
+    real(kind=dp), allocatable :: beta(:)
+      !! \(r|p\rangle\); projectors
     real(kind=dp), allocatable :: dRadGrid(:)
       !! Derivative of radial grid
     real(kind=dp) :: psRMax
@@ -2243,7 +2245,7 @@ module wfcExportVASPMod
 
     
     ! Output variables:
-    type (pseudo) :: ps(nsp)
+    type (pseudo), intent(out) :: ps(nsp)
       !! Holds all information needed from pseudopotential
 
 
@@ -2678,15 +2680,39 @@ module wfcExportVASPMod
   end subroutine calculateSplineCoefficients
 
 !----------------------------------------------------------------------------
-  subroutine calculateProjectors()
-    !! @todo Add arguments to `calculateProjectors` #thistask @endtodo
+  subroutine calculateProjectors(nsp, ps)
+    !! Convert real-space projectors from spline grid to radial grid
+    !! and calculate \(|\beta\rangle = r|p\rangle\)
+    !!
 
     implicit none
 
+
+    ! Input variables:
+    integer, intent(in) :: nsp
+      !! Number of types of atoms
+
+
+    ! Output variables:
+    type (pseudo), intent(inout) :: ps(nsp)
+      !! Holds all information needed from pseudopotential
+
+
+    ! Local variables:
+    integer :: ityp, ip, ir
+      !! Loop indices
+    
+    real(kind=dp) :: projRadGrid
+      !! Projector converted to radial grid
+
+
     do ityp = 1, nsp
+
+      allocate(ps(ityp)%beta(ps(ityp)%nmax, ps(ityp)%nChannels))
+        !! @todo Make sure that `beta` is deallocated @endtodo
       ps(ityp)%beta = 0.0_dp
 
-      do ip = 1, nProj
+      do ip = 1, ps(ityp)%nChannels
         do ir = 1, ps(ityp)%nmax
           
           if (ps(ityp)%radGrid(ir) > ps(ityp)%realProjSpline(100,1,1)) exit

@@ -62,6 +62,7 @@ program wfcExportVASPMain
     !! * Read QE input files
     !! @todo Remove this once extracted from QE #end @endtodo
   
+  !------------------------------------------------------------------------------
 
   if (ionode_local) write(stdout,*) "Reading WAVECAR"
 
@@ -76,6 +77,7 @@ program wfcExportVASPMain
   call distributeKpointsInPools(nkstot_local)
     !! * Figure out how many k-points there should be per pool
 
+  !------------------------------------------------------------------------------
 
   if (ionode_local) write(stdout,*) "Calculating G-vectors"
 
@@ -86,6 +88,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done calculating G-vectors"
 
+  !------------------------------------------------------------------------------
 
   if (ionode_local) write(stdout,*) "Reconstructing FFT grid"
 
@@ -97,6 +100,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done reconstructing FFT grid"
 
+  !------------------------------------------------------------------------------
 
   deallocate(ig_l2g)
   deallocate(gCart_local)
@@ -109,6 +113,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done reading vasprun.xml"
 
+  !------------------------------------------------------------------------------
 
   allocate(ps(nsp))
 
@@ -120,6 +125,17 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done reading POTCAR"
 
+  !------------------------------------------------------------------------------
+
+  if (ionode_local) write(stdout,*) "Calculating projectors"
+
+  call calculateProjectors(nsp, ps)
+    !! * Convert projectors from spline to radial grid and calculate
+    !!   \(|\beta\rangle = r|p\rangle\)
+
+  if (ionode_local) write(stdout,*) "Done calculating projectors"
+
+  !------------------------------------------------------------------------------
 
   if (ionode_local) write(stdout,*) "Writing k-point info"
 
@@ -130,6 +146,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done writing k-point info"
 
+  !------------------------------------------------------------------------------
 
   deallocate(wk_local)
 
@@ -143,6 +160,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done writing grid info"
       
+  !------------------------------------------------------------------------------
 
   deallocate(mill_g)
 
@@ -156,6 +174,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done writing cell info"
 
+  !------------------------------------------------------------------------------
   
   deallocate(ityp)
   deallocate(tau)
@@ -169,12 +188,14 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done writing pseudo info"
 
+  !------------------------------------------------------------------------------
 
 #ifdef __MPI
   call poolrecover(et, nbnd_local, nkstot_local, nk_Pool)
     !! @todo Remove this once extracted from QE #end @todo
 #endif
 
+  !------------------------------------------------------------------------------
 
   if (ionode_local) write(stdout,*) "Writing eigenvalues"
 
@@ -183,6 +204,7 @@ program wfcExportVASPMain
 
   if (ionode_local) write(stdout,*) "Done writing eigenvalues"
 
+  !------------------------------------------------------------------------------
 
   deallocate(eigenE)
   deallocate(occ)
@@ -193,6 +215,8 @@ program wfcExportVASPMain
     !! @todo Remove barrier once done testing #end @endtodo
 
   stop
+
+  !------------------------------------------------------------------------------
 
   CALL write_export (mainOutputFile, exportDir)
 
