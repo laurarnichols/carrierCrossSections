@@ -205,7 +205,7 @@ module wfcExportVASPMod
     integer :: nmax
       !! Number of radial grid points
 
-    real(kind=dp), allocatable :: beta(:)
+    real(kind=dp), allocatable :: beta(:,:)
       !! \(r|p\rangle\); projectors
     real(kind=dp), allocatable :: dRadGrid(:)
       !! Derivative of radial grid
@@ -2612,7 +2612,8 @@ module wfcExportVASPMod
     !!   * `splineProj(:,3)` = \(b\)
     !!   * `splineProj(:,4)` = \(c\)
     !!   * `splineProj(:,5)` = \(d\)
-    !! where \(f(\text{radial}) = a + dx*(b + dx*(c + dx*d))\).
+    !! where \(f(\text{radial}) = a + dx*(b + dx*(c + dx*d))\) and
+    !! \(dx = x - r\) where \(r\) is the position on the radial grid.
     !!
     !! @todo Figure out how `calculateSplineCoefficients` @endtodo
 
