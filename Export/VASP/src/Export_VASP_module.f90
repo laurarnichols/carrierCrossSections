@@ -3470,14 +3470,23 @@ module wfcExportVASPMod
           CALL davcio (evc, nwordwfc, iunwfc, (ik-ikStart+1), - 1)
             ! Read the wavefunction for this k-point
             !! @todo Figure out what the "wavefunction" is here #thistask @endtodo
+            !! @note
+            !!  I think this is the actual final wavefunction, not partial waves.
+            !! @endnote
 
           igk(1:ngk_local(ik-ikStart+1)) = igk_large(ik-ikStart+1,1:ngk_local(ik-ikStart+1))
             !! @todo Add `igk` as a local variable #thistask @endtodo
             !! @todo Add `igk_large` as an input variable #thistask @endtodo
 
           CALL init_us_2(npw, igk, xk_local(1,ik), vkb)
+            ! Calculate `beta` for this k-point
           local_pw = ngk(ik-ikStart+1)
-
+          
+          !> @note
+          !>  The calls to `calbec` here are what actual performs the integration
+          !>  to calculate \(\langle\beta|\psi\rangle\). If we are only using the
+          !>  gamma point, no projections are output. 
+          !> @endnote
           IF ( gamma_only ) THEN
             !! @todo Figure out if need to have `gamma_only` variable here and how to set @endtodo
             CALL calbec ( ngk_g(ik), vkb, evc, becp )
