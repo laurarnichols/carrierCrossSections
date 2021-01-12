@@ -3421,13 +3421,20 @@ module wfcExportVASPMod
     USE poscar
     USE lattice
 
-    TYPE (grid_3d)     GRID
-    TYPE (latt)        LATT_CUR
-    TYPE (nonlr_struct) NONLR_S
     TYPE (nonl_struct) NONL_S
     TYPE (wavespin)    W
-  ! local
-    INTEGER NK
+
+    ! Input variables:
+    integer, intent(in) :: nkstot_local
+      !! Total number of k-points
+
+
+    ! Output variables:
+
+
+    ! Local variables:
+    integer :: ik
+      !! Loop index
 
     do ik = 1, nkstot_local
     ! do ik = ikStart, ikEnd
