@@ -3432,14 +3432,8 @@ module wfcExportVASPMod
     DO NK=1,W%WDES%NKPTS
     ! do ik = ikStart, ikEnd
 
-       IF (NONLR_S%LREAL) THEN
-          CALL PHASER(GRID,LATT_CUR,NONLR_S,NK,W%WDES)
-          CALL RPRO(NONLR_S,W%WDES,W,GRID,NK)
-
-       ELSE
           CALL PHASE(W%WDES,NONL_S,NK)
           CALL PROJ(NONL_S,W%WDES,W,NK)
-       ENDIF
     ENDDO
 
     return
