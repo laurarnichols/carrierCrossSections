@@ -3429,12 +3429,12 @@ module wfcExportVASPMod
   ! local
     INTEGER NK
 
-    DO NK=1,W%WDES%NKPTS
+    do ik = 1, nkstot_local
     ! do ik = ikStart, ikEnd
 
           CALL PHASE(W%WDES,NONL_S,NK)
           CALL PROJ(NONL_S,W%WDES,W,NK)
-    ENDDO
+    enddo
 
     return
   end subroutine calculateProjections
