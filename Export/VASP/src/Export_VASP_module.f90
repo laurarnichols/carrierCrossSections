@@ -3523,7 +3523,7 @@ module wfcExportVASPMod
   end subroutine writeProjectionsQE
 
 !----------------------------------------------------------------------------
- SUBROUTINE MYRON_MOD(P,W,WDES,T_INFO,LATT_CUR,KPOINTS)
+  subroutine writeProjectionsVASP(P,W,WDES,T_INFO,LATT_CUR,KPOINTS)
 
       USE prec
       USE constant
@@ -3665,7 +3665,7 @@ module wfcExportVASPMod
  335  FORMAT(5(I4,1x),2g12.4)      
       
       RETURN
-  END
+  end subroutine writeProjectionsVASP
 
 !----------------------------------------------------------------------------
   subroutine subroutineTemplate()
