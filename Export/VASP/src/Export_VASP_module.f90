@@ -3443,9 +3443,8 @@ module wfcExportVASPMod
        ENDIF
     ENDDO
 
-
     return
-  end subroutine subroutineTemplate
+  end subroutine calculateProjections
 
 !----------------------------------------------------------------------------
   subroutine writeProjectionsQE()
