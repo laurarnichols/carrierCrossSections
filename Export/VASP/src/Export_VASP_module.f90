@@ -3415,6 +3415,39 @@ module wfcExportVASPMod
   end subroutine writeEigenvalues
 
 !----------------------------------------------------------------------------
+  subroutine calculateProjections()
+    implicit none
+
+    USE poscar
+    USE lattice
+
+    TYPE (grid_3d)     GRID
+    TYPE (latt)        LATT_CUR
+    TYPE (nonlr_struct) NONLR_S
+    TYPE (nonl_struct) NONL_S
+    TYPE (wavespin)    W
+  ! local
+    INTEGER NK
+
+    DO NK=1,W%WDES%NKPTS
+#ifdef MPI
+       IF (MOD(NK-1,W%WDES%COMM_KINTER%NCPU).NE.W%WDES%COMM_KINTER%NODE_ME-1) CYCLE
+#endif
+       IF (NONLR_S%LREAL) THEN
+          CALL PHASER(GRID,LATT_CUR,NONLR_S,NK,W%WDES)
+          CALL RPRO(NONLR_S,W%WDES,W,GRID,NK)
+
+       ELSE
+          CALL PHASE(W%WDES,NONL_S,NK)
+          CALL PROJ(NONL_S,W%WDES,W,NK)
+       ENDIF
+    ENDDO
+
+
+    return
+  end subroutine subroutineTemplate
+
+!----------------------------------------------------------------------------
   subroutine writeProjectionsQE()
 
     implicit none
