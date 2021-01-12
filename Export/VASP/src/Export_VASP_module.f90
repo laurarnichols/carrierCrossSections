@@ -3432,8 +3432,8 @@ module wfcExportVASPMod
     do ik = 1, nkstot_local
     ! do ik = ikStart, ikEnd
 
-          CALL PHASE(W%WDES,NONL_S,NK)
-          CALL PROJ(NONL_S,W%WDES,W,NK)
+      CALL PHASE(W%WDES,NONL_S,ik)
+      CALL PROJ(NONL_S,W%WDES,W,ik)
     enddo
 
     return
