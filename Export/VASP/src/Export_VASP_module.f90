@@ -3430,9 +3430,8 @@ module wfcExportVASPMod
     INTEGER NK
 
     DO NK=1,W%WDES%NKPTS
-#ifdef MPI
-       IF (MOD(NK-1,W%WDES%COMM_KINTER%NCPU).NE.W%WDES%COMM_KINTER%NODE_ME-1) CYCLE
-#endif
+    ! do ik = ikStart, ikEnd
+
        IF (NONLR_S%LREAL) THEN
           CALL PHASER(GRID,LATT_CUR,NONLR_S,NK,W%WDES)
           CALL RPRO(NONLR_S,W%WDES,W,GRID,NK)
