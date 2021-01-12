@@ -3415,7 +3415,7 @@ module wfcExportVASPMod
   end subroutine writeEigenvalues
 
 !----------------------------------------------------------------------------
-  subroutine writeProjections()
+  subroutine writeProjectionsQE()
 
     implicit none
 
@@ -3520,7 +3520,152 @@ module wfcExportVASPMod
     endif
 
     return
-  end subroutine writeProjections
+  end subroutine writeProjectionsQE
+
+!----------------------------------------------------------------------------
+ SUBROUTINE MYRON_MOD(P,W,WDES,T_INFO,LATT_CUR,KPOINTS)
+
+      USE prec
+      USE constant
+      USE radial
+      USE pseudo
+      USE wave
+      USE poscar
+      USE lattice
+      USE mkpoints
+
+      IMPLICIT REAL(q) (A-H,O-Z)
+      
+      TYPE (potcar)  :: P(NTYP)
+      TYPE (wavespin):: W
+      TYPE (wavedes) ::  WDES
+      TYPE (type_info) ::T_INFO
+      TYPE (latt) ::LATT_CUR
+      TYPE (kpoints_struct) KPOINTS
+
+      REAL(q),ALLOCATABLE::POSIONCAR(:,:)
+
+!     REAL(q),DIMENSION(3,3)::BASIS
+      
+!     IF(WDES%NTYP/=1)THEN
+!     WRITE(*,*)'ERROR: This version works for NTYP=1 only, NTYP=',WDES%NTYP
+!     RETURN
+!     ENDIF
+      
+      WRITE(33,*)T_INFO%NTYP      !number of types
+      WRITE(33,*)(T_INFO%NITYP(NT),NT=1,T_INFO%NTYP)! number of types per type
+!     WRITE(34,*)T_INFO%NTYP      !number of types
+      WRITE(33,*)T_INFO%NIONS     !number of ions
+!     WRITE(34,*)T_INFO%NIONS     !number of ions
+      ALLOCATE(POSIONCAR(3,T_INFO%NIONS))
+      POSIONCAR=T_INFO%POSION
+      CALL DIRKAR(T_INFO%NIONS,POSIONCAR,LATT_CUR%A)
+!     atomic positions (in  Angstroms)
+!     DO NI=1,T_INFO%NIONS
+!     WRITE(33,*) ,(POSIONCAR(IDIR,NI),IDIR=1,3)
+!     ENDDO
+      
+      NIS   =1
+      DO NT=1,T_INFO%NTYP
+         DO NI=NIS,T_INFO%NITYP(NT)+NIS-1
+!     writes the type and coords of each atom
+            WRITE(33,fmt='(I2,3(1x,g14.8))')&
+            NT,(POSIONCAR(IDIR,NI),IDIR=1,3)        
+         ENDDO
+         NIS = NIS+T_INFO%NITYP(NT)
+      ENDDO                  
+
+      DO NT=1,T_INFO%NTYP
+         WRITE(33,*)P(NT)%LMAX  !number of L-channels for each type
+!     WRITE(34,*)P(NT)%LMAX  !number of L-channels for each type
+         WRITE(33,*)WDES%LMMAX(NT) !number of LM channels for each type 
+!     WRITE(34,*)WDES%LMMAX(NT) !number of LM channels for each type 
+         WRITE(33,*)P(NT)%R%NMAX !number of grid points for each type
+      ENDDO
+      
+!     DO NT=1,T_INFO%NTYP
+!     WRITE(34,*)T_INFO%NITYP(NT) !number of ions per type
+!     ENDDO
+
+!      NIS   =1
+!      DO NT=1,T_INFO%NTYP
+!         DO NI=NIS,T_INFO%NITYP(NT)+NIS-1
+!            WRITE(34,*)NT       !writes the type of each atom          
+!         ENDDO
+! 211     NIS = NIS+T_INFO%NITYP(NT)
+!      ENDDO                  
+      
+      WRITE(33,*)WDES%NB_TOT    !number of bands
+      WRITE(33,*)WDES%NKPTS     !number of kpoints
+      WRITE(33,*)WDES%ISPIN     !number of spins
+
+!     WRITING GRID AND WEIGHTS FOR THE SIMPSON INTEGRATION FOR EACH TYPE
+      DO NT=1,T_INFO%NTYP
+         
+         DO I=1,P(NT)%R%NMAX 
+            WRITE(33,fmt='(2g12.4)')P(NT)%R%R(I),P(NT)%R%SI(I)
+         ENDDO
+         
+         DO LL =1,P(NT)%LMAX    ! loop over all l and energy channels
+            
+            L=P(NT)%LPS(LL)     ! l quantum number
+            
+            WRITE(33,*)L, LL     !WRITES THE QUANTUM NUMBER L ONCE
+            
+         ENDDO
+       
+!     WRITING ALL THE AE (PS) RADIAL ATOMIC WAVEFUNCTIONS
+         DO LL =1,P(NT)%LMAX    ! loop over all l and energy channels
+            
+            L=P(NT)%LPS(LL)     ! l quantum number
+            
+            DO I=1,P(NT)%R%NMAX
+                
+               WRITE(33,fmt='(2g12.4)')P(NT)%WAE(I,LL),P(NT)%WPS(I,LL)
+               
+            ENDDO
+         ENDDO
+         
+      ENDDO
+      
+!     WRITING THE PROJECTIONS
+      
+      DO ISP=1,WDES%ISPIN
+         DO NK=1,WDES%NKPTS
+            DO NB=1,WDES%NB_TOT
+               DO ISPINOR =0,WDES%NRSPINORS-1
+                  
+                  LMBASE =ISPINOR *(WDES%NPRO/2)
+                  
+                  NIS   =1
+                  DO NT=1,T_INFO%NTYP
+                     LMMAXC=WDES%LMMAX(NT)
+                     IF (LMMAXC==0) GOTO 210
+                     
+                     DO NI=NIS,T_INFO%NITYP(NT)+NIS-1
+                        DO L=1,LMMAXC
+                           CPR=REAL(W%CPROJ(L+LMBASE,NB,NK,ISP))
+                           CPI=IMAG(W%CPROJ(L+LMBASE,NB,NK,ISP))
+                           WRITE(33,*)W%CPROJ(L+LMBASE,NB,NK,ISP)
+                           WRITE(34,*)W%CPROJ(L+LMBASE,NB,NK,ISP)
+                           WRITE(100,335)NT,NI,L+LMBASE,NB,NK,CPR,CPI
+                        ENDDO
+                        
+                        LMBASE = LMMAXC+LMBASE
+                     ENDDO
+ 210                 NIS = NIS+T_INFO%NITYP(NT)
+                  ENDDO                  
+               ENDDO
+               
+            ENDDO
+         ENDDO
+      ENDDO
+      
+ 333  FORMAT(4I3,2g12.4)      
+ 335  FORMAT(5(I4,1x),2g12.4)      
+      
+      RETURN
+  END
 
 !----------------------------------------------------------------------------
   subroutine subroutineTemplate()
